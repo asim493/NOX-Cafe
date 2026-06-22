@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NOX Café — Café & Codes</title>
+    <!-- Google Fonts CDNs -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;600;700&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+           CSS CUSTOM PROPERTIES (VARIABLES)
+           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+        :root {
+            --bg-noir: #07070F;
+            --card-dark: #141427;
+            --card-mid: #1A1A30;
+            --gold-primary: #C8A96E;
+            --gold-light: #E8D5B0;
+            --gold-gradient: linear-gradient(135deg, #FFD77A 0%, #C8A96E 50%, #8B6914 100%);
+            --ember-accent: #FF6B35;
+            --blue-accent: #4A9EFF;
+            --green-accent: #2ECC71;
+            --cream-text: #F0E8D0;
+            --font-display: 'Playfair Display', serif;
+            --font-body: 'Inter', sans-serif;
+            --font-code: 'JetBrains Mono', monospace;
+            --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+           RESET & BASE STYLES
+           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            background-color: var(--bg-noir);
+            color: var(--cream-text);
+            font-family: var(--font-body);
+            overflow-x: hidden;
+        }
+
+        /* Custom Gold Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-noir);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--gold-primary);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--gold-light);
+        }
+
+        body {
+            min-height: 100vh;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Fixed Background Canvas */
+        #particleCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .container {
+            position: relative;
+            z-index: 2;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Utility Reveal Class for Intersection Observer */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+           HERO SECTION
+           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 60px 24px;
+            position: relative;
+        }
+
+        /* Typographic Framed Logo */
+        .logo-frame {
+            position: relative;
+            padding: 24px 48px;
+            border: 1px solid rgba(200, 169, 110, 0.3);
+            margin-bottom: 40px;
+            opacity: 0;
+            transform: scale(0.9);
+            animation: logoEntrance 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            background: rgba(7, 7, 15, 0.6);
+        }
+
+        /* Decorative Corner Ticks */
+        .logo-frame::before, .logo-frame::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border: 2px solid var(--gold-primary);
+        }
+        .logo-frame::before {
+            top: -4px; left: -4px;
+            border-right: none; border-bottom: none;
+        }
+        .logo-frame::after {
+            bottom: -4px; right: -4px;
+            border-left: none; border-top: none;
+        }
+
+        /* Inner corner complements */
+        .logo-frame-inner::before, .logo-frame-inner::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border: 2px solid var(--gold-primary);
+        }
+        .logo-frame-inner::before {
+            top: -4px; right: -4px;
+            border-left: none; border-bottom: none;
+        }
+        .logo-frame-inner::after {
+            bottom: -4px; left: -4px;
+            border-right: none; border-top: none;
+        }
+
+        /* Ghost Coffee Ring Watermark behind Logo text */
+        .logo-watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 110px;
+            height: 110px;
+            border: 2px dashed rgba(200, 169, 110, 0.08);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .logo-watermark::after {
+            content: '';
+            position: absolute;
+            top: 5px; left: 5px; right: 5px; bottom: 5px;
+            border: 1px solid rgba(200, 169, 110, 0.04);
+            border-radius: 50%;
+        }
+
+        .logo-text {
+            font-family: var(--font-display);
+            font-size: 4rem;
+            font-weight: 900;
+            letter-spacing: 4px;
+            background: var(--gold-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+            position: relative;
+            z-index: 2;
+        }
+
+        .logo-subtitle {
+            font-family: var(--font-body);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 6px;
+            color: var(--gold-light);
+            margin-top: 8px;
+            opacity: 0.8;
+            font-weight: 500;
+        }
+
+        /* Animated Steam System */
+        .steam-container {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            justify-content: space-between;
+            width: 60px;
+            height: 40px;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        .steam-line {
+            width: 2px;
+            background: linear-gradient(to top, rgba(200, 169, 110, 0.2), rgba(232, 213, 176, 0));
+            height: 100%;
+            animation: steamRise 3s infinite ease-in-out;
+            transform-origin: bottom center;
+            filter: blur(1px);
+        }
+        .steam-line:nth-child(1) { animation-delay: 0.2s; animation-duration: 2.8s; }
+        .steam-line:nth-child(2) { animation-delay: 0.7s; animation-duration: 3.2s; }
+        .steam-line:nth-child(3) { animation-delay: 1.2s; animation-duration: 2.5s; }
+        .steam-line:nth-child(4) { animation-delay: 1.8s; animation-duration: 3.5s; }
+        .steam-line:nth-child(5) { animation-delay: 2.3s; animation-duration: 2.9s; }
+
+        /* Hero Typography */
+        .hero h1 {
+            font-family: var(--font-display);
+            font-size: clamp(2.5rem, 5vw, 4.5rem);
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 16px;
+            color: #FFFFFF;
+            opacity: 0;
+            animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards;
+        }
+
+        .hero-byline {
+            font-size: clamp(1rem, 2vw, 1.25rem);
+            font-weight: 300;
+            color: var(--gold-light);
+            margin-bottom: 40px;
+            opacity: 0;
+            animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards;
+        }
+
+        /* Badges/Pills Row */
+        .pill-container {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+            opacity: 0;
+            animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.8s forwards;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(20, 20, 39, 0.6);
+            border: 1px solid rgba(200, 169, 110, 0.15);
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            backdrop-filter: blur(4px);
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            position: relative;
+        }
+        .pulse-dot::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            border-radius: 50%;
+            animation: pulseGlow 2s infinite ease-in-out;
+            background: inherit;
+        }
+        .pill.ember .pulse-dot { background-color: var(--ember-accent); }
+        .pill.blue .pulse-dot { background-color: var(--blue-accent); }
+        .pill.green .pulse-dot { background-color: var(--green-accent); }
+
+        /* Animated Scroll Cue */
+        .scroll-cue {
+            position: absolute;
+            bottom: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            opacity: 0;
+            animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) 1.2s forwards;
+        }
+        .scroll-cue span {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: rgba(240, 232, 208, 0.4);
+        }
+        .scroll-line-wrap {
+            width: 1px;
+            height: 60px;
+            background: rgba(200, 169, 110, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+        .scroll-line-fill {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--gold-gradient);
+            animation: lineScroll 2s infinite cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+           STATS BAR
+           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+        .stats-bar {
+            background: linear-gradient(to right, rgba(20, 20, 39, 0.8), rgba(26, 26, 48, 0.8));
+            border-top: 1px solid rgba(200, 169, 110, 0.2);
+            border-bottom: 1px solid rgba(200, 169, 110, 0.2);
+            padding: 30px 0;
+            backdrop-filter: blur(8px);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+            text-align: center;
+        }
+        .stat-item h3 {
+            font-family: var(--font-display);
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: var(--gold-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 4px;
+        }
+        .stat-item p {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(240, 232, 208, 0.6);
+        }
+
+        /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+           SECTION GENERALS
+           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+        .section-padding {
+            padding: 100px 0;
+        }
+        .section-header {
+            margin-bottom: 50px;
+            text-align: center;
+        }
+        .section-header h2 {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #FFFFFF;
+            margin-bottom: 8px;
+        }
+        .section-header p {
+            color: var(--gold-primary);
+            font-size: 1rem;
+            letter-spacing: 1px;
+        }
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 30px;
+        }
+
+        /* Universal Card Layout Hover Base */
+        .code-card {
+            background-color: var(--card-dark);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: var(--transition-smooth);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .code-card:hover {
+            transform: translateY(-5px);
+        }
+
+        /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+           SECTION A: PLAY SAFE VOUCHERS (Ticket Aesthetic)
+           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+        .voucher-card {
+            border: 1px solid rgba(200, 169, 110, 0.2);
+        }
+        .voucher-card:hover {
+            box-shadow: 0 10px 30px rgba(200, 169, 110, 0.15);
+            border-color: rgba(200, 169, 110, 0.4);
+        }
+        .voucher-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: linear-gradient(to right, rgba(26, 26, 48, 0.5), rgba(20, 20, 39, 0.5));
+        }
+        .voucher-brand {
+            font-family: var(--font-display);
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--gold-light);
+            font-size: 1.1rem;
+        }
+        .voucher-badge {
+            background: rgba(255, 107, 53, 0.15);
+            color: var(--ember-accent);
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .voucher-perforation {
+            border-top: 2px dashed rgba(200, 169, 110, 0.2);
+            height: 0;
+            width: 100%;
+            position: relative;
+        }
+        /* Perforation side cutouts */
+        .voucher-perforation::before, .voucher-perforation::after {
+            content: '';
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background-color: var(--bg-noir);
+            border-radius: 50%;
+            top: -7px;
+        }
+        .voucher-perforation::before { left: -8px; }
+        .voucher-perforation::after { right: -8px; }
+
+        .voucher-body {
+            padding: 30px 20px;
+            text-align: center;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .code-display {
+            font-family: var(--font-code);
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #FFFFFF;
+            margin-bottom: 5px;
+        }
+        .voucher-footer {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(26, 26, 48, 0.3);
+            border-top: 1px solid rgba(200, 169, 110, 0.1);
+        }
+        .expiry-text {
+            font-size: 0.75rem;
+            color: rgba(240, 232, 208, 0.5);
+            font-family: var(--font-code);
+        }
+
+        /* Universal Elegant Copy Button */
+        .btn-copy {
+            background: transparent;
+            border: 1px solid var(--gold-primary);
+            color: var(--gold-primary);
+            font-family: var(--font-body);
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-copy:hover {
+            background: var(--gold-primary);
+            color: var(--bg-noir);
+        }
+        .btn-copy.copied {
+            background: var(--green-accent) !important;
+            border-color: var(--green-accent) !important;
+            color: #FFFFFF !important;
+        }
+
+        /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+           SECTION B: GAME ENTRIES (Arcade Terminal Aesthetic)
+           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+        .game-card {
+            border: 1px solid rgba(74, 158, 255, 0.2);
+            background: linear-gradient(180deg, #141427 0%, #0d0d1d 100%);
+        }
+        .game-card:hover {
+            box-shadow: 0 10px 30px rgba(74, 158, 255, 0.15);
+            border-color: rgba(74, 158, 255, 0.5);
+        }
+        /* Scanline Overlay Effect */
+        .game-card::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 255, 0, 0.03));
+            z-index: 2;
+            background-size: 100% 4px, 6px 100%;
+            pointer-events: none;
+        }
+        .game-header {
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(74, 158, 255, 0.15);
+        }
+        .entry-label {
+            font-family: var(--font-code);
+            font-size: 0.75rem;
+            color: var(--blue-accent);
+            letter-spacing: 1px;
+        }
+        .game-icon {
+            font-size: 1.3rem;
+            animation: floatingIcon 4s ease-in-out infinite;
+        }
+        .game-body {
+            padding: 35px 20px;
+            text-align: center;
+            flex-grow: 1;
+        }
+        .terminal-code-wrap {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+        }
+        .game-code {
+            font-family: var(--font-code);
+            font-size: 2.6rem;
+            font-weight: 700;
+            color: #FFFFFF;
+            text-shadow: 0 0 10px rgba(74, 158, 255, 0.5);
+        }
+        .blinking-cursor {
+            width: 12px;
+            height: 32px;
+            background-color: var(--blue-accent);
+            margin-left: 6px;
+            animation: cursorBlink 1s infinite steps(2, start);
+            box-shadow: 0 0 8px var(--blue-accent);
+        }
+        .game-value {
+            font-family: var(--font-code);
+            font-size: 0.85rem;
+            color: rgba(240, 232, 208, 0.6);
+        }
+        .game-footer {
+            padding: 20px;
+            border-top: 1px solid rgba(74, 158, 255, 0.1);
+            display: flex;
+            justify-content: flex-end;
+            background: rgba(7, 7, 15, 0.3);
+        }
+        .btn-copy-blue {
+            border-color: var(--blue-accent);
+            color: var(--blue-accent);
+        }
+        .btn-copy-blue:hover {
+            background: var(--blue-accent);
+            color: #000000;
+        }
+
+        /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+           SECTION C: SECURE ACCESS (Hacker Terminal)
+           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+        .secure-card {
+            border: 1px solid rgba(46, 204, 113, 0.2);
+            background-color: #0b0b14;
+        }
+        .secure-card:hover {
+            box-shadow: 0 10px 30px rgba(46, 204, 113, 0.15);
+            border-color: rgba(46, 204, 113, 0.5);
+        }
+        .terminal-window-header {
+            background-color: #111122;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(46, 204, 113, 0.15);
+        }
+        .window-dots {
+            display: flex;
+            gap: 6px;
+        }
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        .dot-red { background-color: #ff5f56; }
+        .dot-yellow { background-color: #ffbd2e; }
+        .dot-green { background-color: #27c93f; }
+        
+        .clearance-label {
+            font-family: var(--font-code);
+            font-size: 0.7rem;
+            background-color: rgba(46, 204, 113, 0.15);
+            color: var(--green-accent);
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+
+        .secure-body {
+            padding: 24px;
+            flex-grow: 1;
+            font-family: var(--font-code);
+            font-size: 0.85rem;
+        }
+        .prompt-text {
+            color: rgba(46, 204, 113, 0.5);
+            margin-bottom: 8px;
+        }
+        .secure-code-output {
+            font-size: 2.2rem;
+            color: var(--green-accent);
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin: 14px 0;
+            text-shadow: 0 0 12px rgba(46, 204, 113, 0.3);
+        }
+        .status-line {
+            color: var(--green-accent);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .secure-footer {
+            padding: 16px 24px;
+            background-color: #111122;
+            border-top: 1px solid rgba(46, 204, 113, 0.1);
+            display: flex;
+            justify-content: flex-end;
+        }
+        .btn-copy-green {
+            border-color: var(--green-accent);
+            color: var(--green-accent);
+            width: 100%;
+            text-align: center;
+        }
+        .btn-copy-green:hover {
+            background: var(--green-accent);
+            color: #000000;
+        }
+
+
+        /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+           FOOTER SECTION
+           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+        footer {
+            background-color: #04040a;
+            border-top: 1px solid rgba(200, 169, 110, 0.1);
+            padding: 60px 0 40px;
+            text-align: center;
+        }
+        .footer-logo {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            background: var(--gold-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 16px;
+            display: inline-block;
+        }
+        .footer-text {
+            font-size: 0.85rem;
+            color: rgba(240, 232, 208, 0.4);
+            max-width: 600px;
+            margin: 0 auto 24px;
+        }
+        .footer-credits {
+            font-size: 0.75rem;
+            color: var(--gold-primary);
+            opacity: 0.6;
+            letter-spacing: 0.5px;
+        }
+
+
+        /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+           TOAST NOTIFICATION SYSTEM
+           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+        #toastContainer {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: none;
+        }
+        .toast {
+            background-color: #141427;
+            border: 1px solid var(--gold-primary);
+            color: #FFFFFF;
+            padding: 16px 24px;
+            border-radius: 6px;
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            pointer-events: auto;
+            transform: translateX(120%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .toast.show {
+            transform: translateX(0);
+        }
+        .toast-icon {
+            color: var(--green-accent);
+            font-weight: bold;
+        }
+
+
+        /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+           ANIMATIONS KEYFRAMES
+           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+        @keyframes logoEntrance {
+            0% { opacity: 0; transform: scale(0.92) translateY(10px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes fadeInUp {
+            0% { opacity: 0; transform: translateY(25px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes steamRise {
+            0% { transform: translateY(40px) scaleX(1); opacity: 0; }
+            15% { opacity: 0.6; }
+            50% { transform: translateY(15px) scaleX(1.4); opacity: 0.3; }
+            100% { transform: translateY(-10px) scaleX(0.7); opacity: 0; }
+        }
+        @keyframes pulseGlow {
+            0% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(255,255,255,0.4); }
+            70% { transform: scale(2.5); opacity: 0; box-shadow: 0 0 0 8px rgba(255,255,255,0); }
+            100% { transform: scale(1); opacity: 0; }
+        }
+        @keyframes lineScroll {
+            0% { transform: translateY(-100%); }
+            70% { transform: translateY(100%); }
+            100% { transform: translateY(100%); }
+        }
+        @keyframes floatingIcon {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+            100% { transform: translateY(0px); }
+        }
+        @keyframes cursorBlink {
+            from, to { background-color: transparent }
+            50% { background-color: var(--blue-accent); }
+        }
+
+        /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+           ACCESSIBILITY & RESPONSIVENESS
+           ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+        @media (max-width: 768px) {
+            .cards-grid {
+                grid-template-columns: 1fr;
+                max-width: 450px;
+                margin: 0 auto;
+            }
+            .hero h1 {
+                margin-top: 10px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-delay: 0s !important;
+                animation-duration: 0s !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0s !important;
+                scroll-behavior: auto !important;
+            }
+            #particleCanvas, .steam-container, .blinking-cursor, .scroll-cue {
+                display: none !important;
+            }
+            .reveal {
+                opacity: 1 !important;
+                transform: none !important;
+            }
+            .logo-frame, .hero h1, .hero-byline, .pill-container {
+                opacity: 1 !important;
+                transform: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Canvas Particle Background Component -->
+    <canvas id="particleCanvas"></canvas>
+
+    <!-- 1. HERO SECTION -->
+    <header class="hero">
+        <div class="logo-frame">
+            <div class="logo-frame-inner"></div>
+            <div class="logo-watermark"></div>
+            <div class="logo-text">NOX</div>
+            <div class="logo-subtitle">Café & Codes</div>
+            <!-- Steam Overlay Elements -->
+            <div class="steam-container">
+                <div class="steam-line"></div>
+                <div class="steam-line"></div>
+                <div class="steam-line"></div>
+                <div class="steam-line"></div>
+                <div class="steam-line"></div>
+            </div>
+        </div>
+
+        <div class="container" style="display: contents;">
+            <h1>Play Safe Codes — Sixteen Exclusive Entries</h1>
+            <p class="hero-byline">Each code valued at $100 · Unique · Verified · Ready to Use</p>
+            
+            <div class="pill-container">
+                <div class="pill ember">
+                    <span class="pulse-dot"></span>
+                    Vouchers
+                </div>
+                <div class="pill blue">
+                    <span class="pulse-dot"></span>
+                    Game Entries
+                </div>
+                <div class="pill green">
+                    <span class="pulse-dot"></span>
+                    Secure Access
+                </div>
+            </div>
+
+            <div class="scroll-cue">
+                <span>Explore Matrix</span>
+                <div class="scroll-line-wrap">
+                    <div class="scroll-line-fill"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 2. STATS BAR STRIP -->
+    <section class="stats-bar">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <h3>16</h3>
+                    <p>Unique Codes</p>
+                </div>
+                <div class="stat-item">
+                    <h3>$1,600</h3>
+                    <p>Total Value</p>
+                </div>
+                <div class="stat-item">
+                    <h3>3–6</h3>
+                    <p>Digit Range</p>
+                </div>
+                <div class="stat-item">
+                    <h3>100%</h3>
+                    <p>Verified Safe</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. SECTION A — PLAY SAFE VOUCHERS -->
+    <section class="section-padding container">
+        <div class="section-header reveal">
+            <h2>Play Safe Vouchers</h2>
+            <p>Premium physical ticket aesthetic with high performance distribution</p>
+        </div>
+        
+        <div class="cards-grid">
+            <!-- Voucher 1 -->
+            <div class="code-card voucher-card reveal">
+                <div class="voucher-header">
+                    <span class="voucher-brand">NOX CAFÉ</span>
+                    <span class="voucher-badge">$100 Value</span>
+                </div>
+                <div class="voucher-perforation"></div>
+                <div class="voucher-body">
+                    <div class="code-display">425</div>
+                </div>
+                <div class="voucher-footer">
+                    <span class="expiry-text">EXP: 12/26</span>
+                    <button class="btn-copy" onclick="copyCode('425', this)">Copy</button>
+                </div>
+            </div>
+            <!-- Voucher 2 -->
+            <div class="code-card voucher-card reveal">
+                <div class="voucher-header">
+                    <span class="voucher-brand">NOX CAFÉ</span>
+                    <span class="voucher-badge">$100 Value</span>
+                </div>
+                <div class="voucher-perforation"></div>
+                <div class="voucher-body">
+                    <div class="code-display">836</div>
+                </div>
+                <div class="voucher-footer">
+                    <span class="expiry-text">EXP: 12/26</span>
+                    <button class="btn-copy" onclick="copyCode('836', this)">Copy</button>
+                </div>
+            </div>
+            <!-- Voucher 3 -->
+            <div class="code-card voucher-card reveal">
+                <div class="voucher-header">
+                    <span class="voucher-brand">NOX CAFÉ</span>
+                    <span class="voucher-badge">$100 Value</span>
+                </div>
+                <div class="voucher-perforation"></div>
+                <div class="voucher-body">
+                    <div class="code-display">5091</div>
+                </div>
+                <div class="voucher-footer">
+                    <span class="expiry-text">EXP: 01/27</span>
+                    <button class="btn-copy" onclick="copyCode('5091', this)">Copy</button>
+                </div>
+            </div>
+            <!-- Voucher 4 -->
+            <div class="code-card voucher-card reveal">
+                <div class="voucher-header">
+                    <span class="voucher-brand">NOX CAFÉ</span>
+                    <span class="voucher-badge">$100 Value</span>
+                </div>
+                <div class="voucher-perforation"></div>
+                <div class="voucher-body">
+                    <div class="code-display">7284</div>
+                </div>
+                <div class="voucher-footer">
+                    <span class="expiry-text">EXP: 01/27</span>
+                    <button class="btn-copy" onclick="copyCode('7284', this)">Copy</button>
+                </div>
+            </div>
+            <!-- Voucher 5 -->
+            <div class="code-card voucher-card reveal">
+                <div class="voucher-header">
+                    <span class="voucher-brand">NOX CAFÉ</span>
+                    <span class="voucher-badge">$100 Value</span>
+                </div>
+                <div class="voucher-perforation"></div>
+                <div class="voucher-body">
+                    <div class="code-display">193</div>
+                </div>
+                <div class="voucher-footer">
+                    <span class="expiry-text">EXP: 02/27</span>
+                    <button class="btn-copy" onclick="copyCode('193', this)">Copy</button>
+                </div>
+            </div>
+            <!-- Voucher 6 -->
+            <div class="code-card voucher-card reveal">
+                <div class="voucher-header">
+                    <span class="voucher-brand">NOX CAFÉ</span>
+                    <span class="voucher-badge">$100 Value</span>
+                </div>
+                <div class="voucher-perforation"></div>
+                <div class="voucher-body">
+                    <div class="code-display">3647</div>
+                </div>
+                <div class="voucher-footer">
+                    <span class="expiry-text">EXP: 02/27</span>
+                    <button class="btn-copy" onclick="copyCode('3647', this)">Copy</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. SECTION B — GAME ENTRY CODES -->
+    <section class="section-padding container">
+        <div class="section-header reveal">
+            <h2 style="color: var(--blue-accent);">Game Entry Entries</h2>
+            <p style="color: rgba(74, 158, 255, 0.75);">Arcade terminal matrices and digital node links</p>
+        </div>
+
+        <div class="cards-grid">
+            <!-- Game Entry 1 -->
+            <div class="code-card game-card reveal">
+                <div class="game-header">
+                    <span class="entry-label">ENTRY #001</span>
+                    <span class="game-icon">🕹️</span>
+                </div>
+                <div class="game-body">
+                    <div class="terminal-code-wrap">
+                        <span class="game-code">94716</span>
+                        <span class="blinking-cursor"></span>
+                    </div>
+                    <div class="game-value">Value: $100</div>
+                </div>
+                <div class="game-footer">
+                    <button class="btn-copy btn-copy-blue" onclick="copyCode('94716', this)">Copy</button>
+                </div>
+            </div>
+            <!-- Game Entry 2 -->
+            <div class="code-card game-card reveal">
+                <div class="game-header">
+                    <span class="entry-label">ENTRY #002</span>
+                    <span class="game-icon">🎰</span>
+                </div>
+                <div class="game-body">
+                    <div class="terminal-code-wrap">
+                        <span class="game-code">28350</span>
+                        <span class="blinking-cursor"></span>
+                    </div>
+                    <div class="game-value">Value: $100</div>
+                </div>
+                <div class="game-footer">
+                    <button class="btn-copy btn-copy-blue" onclick="copyCode('28350', this)">Copy</button>
+                </div>
+            </div>
+            <!-- Game Entry 3 -->
+            <div class="code-card game-card reveal">
+                <div class="game-header">
+                    <span class="entry-label">ENTRY #003</span>
+                    <span class="game-icon">👾</span>
+                </div>
+                <div class="game-body">
+                    <div class="terminal-code-wrap">
+                        <span class="game-code">61829</span>
+                        <span class="blinking-cursor"></span>
+                    </div>
+                    <div class="game-value">Value: $100</div>
+                </div>
+                <div class="game-footer">
+                    <button class="btn-copy btn-copy-blue" onclick="copyCode('61829', this)">Copy</button>
+                </div>
+            </div>
+            <!-- Game Entry 4 -->
+            <div class="code-card game-card reveal">
+                <div class="game-header">
+                    <span class="entry-label">ENTRY #004</span>
+                    <span class="game-icon">🚀</span>
+                </div>
+                <div class="game-body">
+                    <div class="terminal-code-wrap">
+                        <span class="game-code">47503</span>
+                        <span class="blinking-cursor"></span>
+                    </div>
+                    <div class="game-value">Value: $100</div>
+                </div>
+                <div class="game-footer">
+                    <button class="btn-copy btn-copy-blue" onclick="copyCode('47503', this)">Copy</button>
+                </div>
+            </div>
+            <!-- Game Entry 5 -->
+            <div class="code-card game-card reveal">
+                <div class="game-header">
+                    <span class="entry-label">ENTRY #005</span>
+                    <span class="game-icon">🔥</span>
+                </div>
+                <div class="game-body">
+                    <div class="terminal-code-wrap">
+                        <span class="game-code">80264</span>
+                        <span class="blinking-cursor"></span>
+                    </div>
+                    <div class="game-value">Value: $100</div>
+                </div>
+                <div class="game-footer">
+                    <button class="btn-copy btn-copy-blue" onclick="copyCode('80264', this)">Copy</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. SECTION C — SECURE ACCESS CODES -->
+    <section class="section-padding container">
+        <div class="section-header reveal">
+            <h2 style="color: var(--green-accent);">Secure Access Protocols</h2>
+            <p style="color: rgba(46, 204, 113, 0.75);">Terminal shell infrastructure overrides</p>
+        </div>
+
+        <div class="cards-grid">
+            <!-- Access Card 1 -->
+            <div class="code-card secure-card reveal">
+                <div class="terminal-window-header">
+                    <div class="window-dots">
+                        <span class="dot dot-red"></span>
+                        <span class="dot dot-yellow"></span>
+                        <span class="dot dot-green"></span>
+                    </div>
+                    <span class="clearance-label">ALPHA</span>
+                </div>
+                <div class="secure-body">
+                    <div class="prompt-text">nox_root@auth_node:~# decrypt --id 01</div>
+                    <div class="secure-code-output">284751</div>
+                    <div class="status-line"><span>✓</span> STATUS: AUTHORIZED</div>
+                </div>
+                <div class="secure-footer">
+                    <button class="btn-copy btn-copy-green" onclick="copyCode('284751', this)">Secure Copy</button>
+                </div>
+            </div>
+            <!-- Access Card 2 -->
+            <div class="code-card secure-card reveal">
+                <div class="terminal-window-header">
+                    <div class="window-dots">
+                        <span class="dot dot-red"></span>
+                        <span class="dot dot-yellow"></span>
+                        <span class="dot dot-green"></span>
+                    </div>
+                    <span class="clearance-label">BETA</span>
+                </div>
+                <div class="secure-body">
+                    <div class="prompt-text">nox_root@auth_node:~# decrypt --id 02</div>
+                    <div class="secure-code-output">941836</div>
+                    <div class="status-line"><span>✓</span> STATUS: AUTHORIZED</div>
+                </div>
+                <div class="secure-footer">
+                    <button class="btn-copy btn-copy-green" onclick="copyCode('941836', this)">Secure Copy</button>
+                </div>
+            </div>
+            <!-- Access Card 3 -->
+            <div class="code-card secure-card reveal">
+                <div class="terminal-window-header">
+                    <div class="window-dots">
+                        <span class="dot dot-red"></span>
+                        <span class="dot dot-yellow"></span>
+                        <span class="dot dot-green"></span>
+                    </div>
+                    <span class="clearance-label">GAMMA</span>
+                </div>
+                <div class="secure-body">
+                    <div class="prompt-text">nox_root@auth_node:~# decrypt --id 03</div>
+                    <div class="secure-code-output">160394</div>
+                    <div class="status-line"><span>✓</span> STATUS: AUTHORIZED</div>
+                </div>
+                <div class="secure-footer">
+                    <button class="btn-copy btn-copy-green" onclick="copyCode('160394', this)">Secure Copy</button>
+                </div>
+            </div>
+            <!-- Access Card 4 -->
+            <div class="code-card secure-card reveal">
+                <div class="terminal-window-header">
+                    <div class="window-dots">
+                        <span class="dot dot-red"></span>
+                        <span class="dot dot-yellow"></span>
+                        <span class="dot dot-green"></span>
+                    </div>
+                    <span class="clearance-label">DELTA</span>
+                </div>
+                <div class="secure-body">
+                    <div class="prompt-text">nox_root@auth_node:~# decrypt --id 04</div>
+                    <div class="secure-code-output">735028</div>
+                    <div class="status-line"><span>✓</span> STATUS: AUTHORIZED</div>
+                </div>
+                <div class="secure-footer">
+                    <button class="btn-copy btn-copy-green" onclick="copyCode('735028', this)">Secure Copy</button>
+                </div>
+            </div>
+            <!-- Access Card 5 -->
+            <div class="code-card secure-card reveal">
+                <div class="terminal-window-header">
+                    <div class="window-dots">
+                        <span class="dot dot-red"></span>
+                        <span class="dot dot-yellow"></span>
+                        <span class="dot dot-green"></span>
+                    </div>
+                    <span class="clearance-label">OMEGA</span>
+                </div>
+                <div class="secure-body">
+                    <div class="prompt-text">nox_root@auth_node:~# decrypt --id 05</div>
+                    <div class="secure-code-output">509162</div>
+                    <div class="status-line"><span>✓</span> STATUS: AUTHORIZED</div>
+                </div>
+                <div class="secure-footer">
+                    <button class="btn-copy btn-copy-green" onclick="copyCode('509162', this)">Secure Copy</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. FOOTER -->
+    <footer>
+        <div class="container">
+            <div class="footer-logo">NOX Café</div>
+            <p class="footer-text">A premium confluence where rich dark-roasted digital aesthetics meet strict cryptography architectures. Handcrafted luxury frameworks deployment execution array.</p>
+            <p class="footer-credits">© 2026 NOX Café · Play Safe Matrix System · All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Toast Notification Overlay Wrapper Container -->
+    <div id="toastContainer"></div>
+
+
+    <!-- ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       JAVASCRIPT MODULE INFRASTRUCTURE
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */ -->
+    <script>
+        /* 1. Canvas Interactive Gold Particle System Field Loop */
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        const particleDensity = 120;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.4;
+                this.vy = (Math.random() - 0.5) * 0.4;
+                this.radius = Math.random() * 1.5 + 0.5;
+                this.alpha = Math.random() * 0.5 + 0.2;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+                    this.reset();
+                }
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(200, 169, 110, ${this.alpha})`;
+                ctx.fill();
+            }
+        }
+
+        // Initialize particle array from density settings
+        for (let i = 0; i < particleDensity; i++) {
+            particles.push(new Particle());
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Render connecting constellation vector links
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < 100) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = `rgba(200, 169, 110, ${0.08 * (1 - dist / 100)})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+
+        // Run animation loop if performance allowance profile respects standard motions
+        if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            animateParticles();
+        }
+
+        /* 2. Intersection Observer Core for Smooth Content Scroll Reveals */
+        const revealElements = document.querySelectorAll('.reveal');
+        const observerOptions = {
+            root: null,
+            threshold: 0.05,
+            rootMargin: '0px 0px -40px 0px'
+        };
+
+        const revealObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        revealElements.forEach(element => {
+            revealObserver.observe(element);
+        });
+
+        /* 3. Clipboard API Operations & Feedback Display Notification Control */
+        function copyCode(codeText, buttonElement) {
+            navigator.clipboard.writeText(codeText).then(() => {
+                // Button Visual State Feedback Updates
+                const originalText = buttonElement.innerText;
+                buttonElement.innerText = "✓ COPIED";
+                buttonElement.classList.add('copied');
+                buttonElement.disabled = true;
+
+                // Push Toast Elements Stack
+                showToast(codeText);
+
+                // Reset timeout trigger sequences execution
+                setTimeout(() => {
+                    buttonElement.innerText = originalText;
+                    buttonElement.classList.remove('copied');
+                    buttonElement.disabled = false;
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed execution mapping clipboard push structural error: ', err);
+            });
+        }
+
+        function showToast(code) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `<span class="toast-icon">✓</span> Code '<strong>${code}</strong>' copied to clipboard`;
+            
+            container.appendChild(toast);
+            
+            // Animate element visibility trigger sequences array frames
+            setTimeout(() => toast.classList.add('show'), 50);
+            
+            // Garbage collection arrays triggers for memory optimization
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
